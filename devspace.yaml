@@ -1,0 +1,24 @@
+################################################################################
+# Copyright ContinuousC. Licensed under the "Elastic License 2.0".             #
+################################################################################
+
+version: v2beta1
+name: auth
+
+dependencies:
+  auth-chart:
+    path: Chart/devspace.yaml
+    pipeline: deploy
+    overwriteVars: true
+    namespace: auth-${USER}
+  auth-oidc-client:
+    path: OIDCClient/devspace.yaml
+    pipeline: dev
+    overwriteVars: true
+    namespace: auth-${USER}
+
+pipelines:
+  deploy: |
+    run_dependency_pipelines auth-chart
+  dev: |
+    run_dependency_pipelines auth-oidc-client

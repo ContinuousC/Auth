@@ -1,0 +1,31 @@
+################################################################################
+# Copyright ContinuousC. Licensed under the "Elastic License 2.0".             #
+################################################################################
+
+version: v2beta1
+name: auth-chart
+
+pullSecrets:
+  gitea:
+    registry: gitea.contc
+
+deployments:
+  auth-chart:
+    helm:
+      displayOutput: true
+      chart:
+        path: .
+      releaseName: auth
+      values:
+        auth:
+          registry: "gitea.contc/continuousc"
+          withRootCa: true
+          domain: ${USER}-app.continuousc.contc
+          oidc:
+            issuer: sso.continuousc.contc/realms/${USER}
+      upgradeArgs:
+        - "--post-renderer=argocd-vault-plugin.sh"
+        - "--post-renderer-args=-"
+      templateArgs:
+        - "--post-renderer=argocd-vault-plugin.sh"
+        - "--post-renderer-args=-"

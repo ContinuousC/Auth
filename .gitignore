@@ -1,0 +1,25 @@
+*~
+\#*#
+.env
+.devspace
+
+
+# Logs
+logs
+*.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+target
+charts
+
+# Editor directories and files
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

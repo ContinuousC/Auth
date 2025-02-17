@@ -1,0 +1,12 @@
+api: 0.1.12
+artifacts:
+  auth-chart:
+    type: helm
+    pre_tag:
+      - run: helm cm-push . continuousc
+    source:
+      type: helm
+      root: .
+      values:
+        - path: auth.oidc.tag
+          artifact: oidc-client-image

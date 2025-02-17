@@ -1,0 +1,161 @@
+kind: pipeline
+type: docker
+name: auth
+
+clone:
+  skip_verify: true
+
+environment:
+  DOCKER_HOST: unix:///var/run/docker.sock
+  BUILDKIT_NO_CLIENT_TOKEN: 1
+  DOCKER_BUILDKIT: 1
+
+volumes:
+  - name: dockerd
+    host:
+      path: /var/run/docker.sock
+
+steps:
+  - name: builder
+    image: plugins/docker
+    volumes:
+      - name: dockerd
+        path: /var/run/docker.sock
+    settings:
+      dockerfile: OIDCClient/Dockerfile
+      context: OIDCClient
+      daemon_off: true
+      dry_run: true
+      repo: oidc-client-builder
+      target: builder
+
+  - name: test
+    depends_on:
+      - builder
+    image: plugins/docker
+    volumes:
+      - name: dockerd
+        path: /var/run/docker.sock
+    settings:
+      dockerfile: OIDCClient/Dockerfile
+      context: OIDCClient
+      daemon_off: true
+      dry_run: true
+      repo: oidc-client-test
+      target: test
+
+  - name: audit
+    depends_on:
+      - builder
+    image: plugins/docker
+    volumes:
+      - name: dockerd
+        path: /var/run/docker.sock
+    settings:
+      dockerfile: OIDCClient/Dockerfile
+      context: OIDCClient
+      daemon_off: true
+      dry_run: true
+      repo: oidc-client-audit
+      target: audit
+
+  - name: build
+    depends_on:
+      - test
+      - audit
+    image: plugins/docker
+    volumes:
+      - name: dockerd
+        path: /var/run/docker.sock
+    settings:
+      dockerfile: OIDCClient/Dockerfile
+      context: OIDCClient
+      daemon_off: true
+      dry_run: true
+      repo: oidc-client
+      target: production
+
+  - name: push-gitea-dev
+    when:
+      ref:
+        - refs/heads/main
+    depends_on:
+      - build
+    image: plugins/docker
+    volumes:
+      - name: dockerd
+        path: /var/run/docker.sock
+    settings:
+      dockerfile: OIDCClient/Dockerfile
+      context: OIDCClient
+      daemon_off: true
+      registry: gitea.contc
+      repo: gitea.contc/continuousc/oidc-client
+      username: ci
+      password:
+        from_secret: gitea-docker-registry-password
+      tags:
+        - latest
+      force_tag: true
+      target: production
+      cache_from:
+        - oidc-client
+
+  - name: push-gitea-tag
+    when:
+      ref:
+        - refs/tags/oidc-client-image_v*
+    depends_on:
+      - build
+    image: plugins/docker
+    volumes:
+      - name: dockerd
+        path: /var/run/docker.sock
+    settings:
+      dockerfile: OIDCClient/Dockerfile
+      context: OIDCClient
+      daemon_off: true
+      registry: gitea.contc
+      repo: gitea.contc/continuousc/oidc-client
+      username: ci
+      password:
+        from_secret: gitea-docker-registry-password
+      tags:
+        - latest
+        - ${DRONE_TAG#oidc-client-image_v}
+      force_tag: true
+      target: production
+      cache_from:
+        - oidc-client
+
+  - name: push-helm-chart-gitea
+    image: alpine/helm
+    when:
+      ref:
+        - refs/tags/auth-chart_v*
+    environment:
+      REGISTRY_URL: http://gitea-http.gitea:3000/api/packages/ContinuousC/helm
+      REGISTRY_PASSWORD:
+        from_secret: gitea-helm-registry-password
+      CHART_TAG: ${DRONE_TAG#auth-chart_v}
+    commands:
+      - helm plugin install https://github.com/chartmuseum/helm-push
+      - helm repo add gitea-continuousc $${REGISTRY_URL} --username ci --password $${REGISTRY_PASSWORD}
+      - helm cm-push Chart gitea-continuousc
+
+  - name: docs
+    image: plugins/docker
+    volumes:
+      - name: dockerd
+        path: /var/run/docker.sock
+    failure: ignore
+    environment:
+      MINIO_CREDENTIALS:
+        from_secret: MINIO_CREDENTIALS
+    settings:
+      daemon_off: true
+      dry_run: true
+      repo: auth-docs
+      target: docs
+      secrets_from_env:
+        - minio_credentials=MINIO_CREDENTIALS

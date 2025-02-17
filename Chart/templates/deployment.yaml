@@ -1,0 +1,68 @@
+################################################################################
+# Copyright ContinuousC. Licensed under the "Elastic License 2.0".             #
+################################################################################
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oidc-client
+  labels:
+    app.kubernetes.io/name: oidc-client
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: oidc-client
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: oidc-client
+        app.kubernetes.io/instance: "{{ .Release.Name }}"
+    spec:
+      imagePullSecrets:
+        - name: private-registry
+      volumes:
+        - name: ca
+          secret:
+            secretName: root-ca
+            optional: true
+      containers:
+        - name: oidc-client
+          imagePullPolicy: Always
+          env:
+            - name: AUTH_OIDC_ISSUER
+              value: "{{.Values.auth.oidc.issuer}}"
+            - name: AUTH_OIDC_CLIENT_ID
+              value: "{{.Values.auth.oidc.client}}"
+            - name: AUTH_DOMAIN
+              value: "{{.Values.auth.domain}}"
+            {{- if .Values.auth.withRootCa }}
+            - name: NODE_EXTRA_CA_CERTS
+              value: /usr/share/ssl/ca.pem
+            {{- end}}
+            {{- if .Values.auth.oidc.extraEnvs }}
+              {{- toYaml .Values.auth.oidc.extraEnvs | nindent 12 }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: oidc-client-secret
+          {{- if .Values.auth.withRootCa }}
+          volumeMounts:
+            - name: ca
+              mountPath: /usr/share/ssl
+              readOnly: true
+          {{- end}}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: http
+          image: "{{ required "Need imageRegistryBase name" .Values.auth.registry }}/{{ .Values.auth.oidc.image }}:{{ .Values.auth.oidc.tag }}"

@@ -1,0 +1,18 @@
+################################################################################
+# Copyright ContinuousC. Licensed under the "Elastic License 2.0".             #
+################################################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: oidc-client
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: oidc-client
+    app.kubernetes.io/instance: "{{ .Release.Name }}"

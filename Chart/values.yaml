@@ -1,0 +1,16 @@
+################################################################################
+# Copyright ContinuousC. Licensed under the "Elastic License 2.0".             #
+################################################################################
+
+auth:
+  registry: "gitea.contc/continuousc"
+  domain: app.continuousc.com
+  withRootCa: false
+  oidc:
+    image: oidc-client
+    tag: '1.0.0-acc.14'
+    issuer: sso.continuousc.com/realms/continuousc
+    client: app
+    extraEnvs:
+      - name: AUTH_VERBOSITY
+        value: "warn"

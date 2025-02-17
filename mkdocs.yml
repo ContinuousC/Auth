@@ -1,0 +1,8 @@
+site_name: "Auth"
+
+nav:
+  - Keycloak Config: keycloak.md
+  - Deployment: deployment.md
+
+plugins:
+  - techdocs-core

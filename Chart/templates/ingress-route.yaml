@@ -1,0 +1,44 @@
+################################################################################
+# Copyright ContinuousC. Licensed under the "Elastic License 2.0".             #
+################################################################################
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: auth
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - kind: Rule
+      match: "Host(`{{.Values.auth.domain }}`)"
+      services:
+        - name: oidc-client
+          port: 8080
+      middlewares:
+        - name: cors-subdomain
+        - name: redirect
+  tls:
+    domains:
+      - main: "{{ .Values.auth.domain }}"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cors-subdomain
+spec:
+  headers:
+    addVaryHeader: true
+    accessControlAllowOriginListRegex:
+      - "^(?:.+\\.)\\Q{{ .Values.auth.domain }}\\E$"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect
+spec:
+  redirectRegex:
+    permanent: true
+    regex: "^https:\\/\\/{{ .Values.auth.domain }}\\/?$$"
+    replacement: "https://{{ .Values.auth.domain }}/auth/login"

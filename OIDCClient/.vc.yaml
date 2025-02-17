@@ -1,0 +1,13 @@
+api: 0.1.12
+artifacts:
+  oidc-client-image:
+    type: docker
+    pre_tag:
+      - run: |
+          docker image rm oidc-client;
+          DOCKER_BUILDKIT=1 docker build --ssh default --target production -t oidc-client:$VC_ARTIFACT_VERSION .
+          docker tag oidc-client:$VC_ARTIFACT_VERSION gitea.contc/continuousc/oidc-client:$VC_ARTIFACT_VERSION
+          docker push gitea.contc/continuousc/oidc-client:$VC_ARTIFACT_VERSION
+    source:
+      type: npm
+      root: .

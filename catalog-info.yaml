@@ -1,0 +1,29 @@
+################################################################################
+# Copyright ContinuousC. Licensed under the "Elastic License 2.0".             #
+################################################################################
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: continuousc-auth-helm-chart
+  description: Auth Helm Chart
+spec:
+  type: service
+  lifecycle: production
+  owner: developers
+  system: continuousc-core
+  dependsOn:
+    - component:oidc-client
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: oidc-client
+  description: server that is configured as oidc client to handle auth code flow, logout, refresh, ...
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: website
+  lifecycle: production
+  owner: developers
+  system: continuousc-core

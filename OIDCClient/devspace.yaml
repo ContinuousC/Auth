@@ -1,0 +1,61 @@
+################################################################################
+# Copyright ContinuousC. Licensed under the "Elastic License 2.0".             #
+################################################################################
+
+version: v2beta1
+name: auth-oidc-client
+
+pullSecrets:
+  gitea:
+    registry: gitea.contc
+
+dev:
+  auth-oidc-client:
+    imageSelector: gitea.contc/continuousc/oidc-client
+    devImage: node:22-alpine
+    workingDir: /app
+    command:
+      - /bin/sh
+      - -c
+      - npm i && DEBUG=jwks npm run dev
+    logs: {}
+    resources:
+      requests:
+        cpu: "0.3"
+        memory: 512Mi
+    sync:
+      - path: package.json:/app/package.json
+        printLogs: true
+        startContainer: true
+        disableDownload: true
+        onUpload:
+          restartContainer: true
+      - path: package-lock.json:/app/package-lock.json
+        printLogs: true
+        startContainer: true
+        disableDownload: true
+        onUpload:
+          restartContainer: true
+      - path: .:/app
+        excludePaths:
+          - /.git
+          - /.env
+          - /.devspace
+          - /.vscode
+          - /devspace.yaml
+          - /node_modules
+          - /dist
+          - /dist-ssr
+          - /package.json
+          - /package-lock.json
+          - "*~"
+        printLogs: true
+        startContainer: true
+        disableDownload: true
+      - path: ~/.npmrc:/root/.npmrc
+        startContainer: true
+        disableDownload: true
+    persistPaths:
+      - path: /app/node_modules
+        volumePath: node_modules
+        skipPopulate: true
