@@ -6,6 +6,9 @@ auth:
   registry: "gitea.contc/continuousc"
   domain: app.continuousc.com
   withRootCa: false
+  secrets:
+    oidc-client-secret: ""
+    keycloak-server-cert: ""
   oidc:
     image: oidc-client
     tag: '1.0.0-acc.14'
