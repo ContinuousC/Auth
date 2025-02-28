@@ -5,15 +5,11 @@
 auth:
   registry: "gitea.contc/continuousc"
   domain: app.continuousc.com
-  withRootCa: false
   secrets:
     oidc-client-secret: ""
-    keycloak-server-cert: ""
+    ca-domain: ""
   oidc:
     image: oidc-client
     tag: '1.0.0-acc.14'
     issuer: sso.continuousc.com/realms/continuousc
     client: app
-    extraEnvs:
-      - name: AUTH_VERBOSITY
-        value: "warn"

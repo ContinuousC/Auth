@@ -19,7 +19,6 @@ deployments:
       values:
         auth:
           registry: "gitea.contc/continuousc"
-          withRootCa: true
           domain: ${USER}-app.continuousc.contc
           oidc:
             issuer: sso.continuousc.contc/realms/${USER}
