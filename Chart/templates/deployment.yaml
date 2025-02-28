@@ -37,9 +37,9 @@ spec:
               value: "{{.Values.auth.oidc.client}}"
             - name: AUTH_DOMAIN
               value: "{{.Values.auth.domain}}"
-            {{- if .Values.auth.withRootCa }}
+            {{- if .Values.auth.secrets.ca-domain }}
             - name: NODE_EXTRA_CA_CERTS
-              value: /usr/share/ssl/ca.pem
+              value: /usr/share/continuousc/ca-cert/ca.crt
             {{- end}}
             {{- if .Values.auth.oidc.extraEnvs }}
               {{- toYaml .Values.auth.oidc.extraEnvs | nindent 12 }}
@@ -47,10 +47,10 @@ spec:
           envFrom:
             - secretRef:
                 name: oidc-client-secret
-          {{- if .Values.auth.withRootCa }}
+          {{- if .Values.auth.secrets.ca-domain }}
           volumeMounts:
             - name: ca
-              mountPath: /usr/share/ssl
+              mountPath: /usr/share/continuousc/ca-cert
               readOnly: true
           {{- end}}
           ports:
